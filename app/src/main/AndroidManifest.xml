@@ -7,9 +7,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Launcher">
 
+        <!--
+            singleTask + stateNotNeeded + clearTaskOnLaunch is the standard setup
+            for a home screen: one instance, always reset to the list.
+            configChanges keeps rotation and similar changes from rebuilding it.
+        -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:clearTaskOnLaunch="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:resumeWhilePausing="true"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="adjustNothing">
+            <!-- Lets Android offer this app as the home screen. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Also listed as a normal app, so it can be opened from another launcher. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

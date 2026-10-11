@@ -1,7 +1,10 @@
 package dev.minimalist.launcher
 
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color as AndroidColor
 import android.net.Uri
 import android.os.Bundle
@@ -27,6 +30,11 @@ class MainActivity : ComponentActivity() {
     private var heldKey by mutableStateOf<String?>(null)
     private var loadJob: Job? = null
 
+    /** Reloads the list whenever an app is installed, removed, updated, enabled or disabled. */
+    private val packageReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = reload()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Light status and navigation bar icons on a transparent bar, regardless of system theme.
         enableEdgeToEdge(
@@ -35,7 +43,19 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         repository = AppRepository(applicationContext)
-        reload()
+
+        // These are protected system broadcasts, so no export flag is needed
+        // and no other app can send them.
+        registerReceiver(
+            packageReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addAction(Intent.ACTION_PACKAGE_CHANGED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addDataScheme("package")
+            },
+        )
 
         setContent {
             // This is the home screen: there is nothing to go back to.
@@ -50,6 +70,17 @@ class MainActivity : ComponentActivity() {
                 onRemove = ::remove,
             )
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Also catches changes no broadcast reports, such as a new default camera.
+        reload()
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(packageReceiver)
+        super.onDestroy()
     }
 
     override fun onStop() {

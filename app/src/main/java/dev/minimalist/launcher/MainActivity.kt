@@ -1,8 +1,11 @@
 package dev.minimalist.launcher
 
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.graphics.Color as AndroidColor
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -21,6 +24,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var repository: AppRepository
     private var home by mutableStateOf(HomeApps(camera = null, apps = emptyList()))
+    private var heldKey by mutableStateOf<String?>(null)
     private var loadJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,9 +39,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // This is the home screen: there is nothing to go back to.
-            BackHandler {}
-            LauncherScreen(home = home, onOpen = ::open)
+            // Back only dismisses a long-press, if one is showing.
+            BackHandler { heldKey = null }
+            LauncherScreen(
+                home = home,
+                heldKey = heldKey,
+                onOpen = ::open,
+                onHold = { heldKey = it.key },
+                onRelease = { heldKey = null },
+                onRemove = ::remove,
+            )
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Come back to a clean list after opening an app or the uninstall dialog.
+        heldKey = null
     }
 
     private fun reload() {
@@ -47,11 +65,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun open(app: AppEntry) {
+    private fun open(app: AppEntry) = start(app.launchIntent())
+
+    /** System uninstall dialog, or App Info for system apps that can't be uninstalled. */
+    private fun remove(app: AppEntry) {
+        heldKey = null
+        val uri = Uri.fromParts("package", app.packageName, null)
+        val action = if (app.isSystem) Settings.ACTION_APPLICATION_DETAILS_SETTINGS else Intent.ACTION_DELETE
+        start(Intent(action, uri))
+    }
+
+    private fun start(intent: Intent) {
         try {
-            startActivity(app.launchIntent())
+            startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            // Removed or disabled since the list was built.
+            // The app was removed or disabled since the list was built.
             reload()
         } catch (e: SecurityException) {
             reload()

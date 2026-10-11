@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A terminal prompt, "> _", in the Phosphor accent.
+    Adaptive icons use a 108dp canvas; launchers may crop to the centre 66dp,
+    so everything stays inside x/y 21..87.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ">" chevron -->
+    <path
+        android:pathData="M37,42 L49,54 L37,66"
+        android:strokeColor="#39FF14"
+        android:strokeWidth="6"
+        android:strokeLineCap="square"
+        android:strokeLineJoin="miter" />
+
+    <!-- "_" block cursor -->
+    <path
+        android:fillColor="#39FF14"
+        android:pathData="M55,60 L71,60 L71,66 L55,66 Z" />
+</vector>

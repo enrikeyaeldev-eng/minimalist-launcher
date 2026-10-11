@@ -1,5 +1,6 @@
 package dev.minimalist.launcher
 
+import android.content.ActivityNotFoundException
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,13 +8,21 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var repository: AppRepository
+    private var apps by mutableStateOf(emptyList<AppEntry>())
+    private var loadJob: Job? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Light status and navigation bar icons on a transparent bar, regardless of system theme.
         enableEdgeToEdge(
@@ -21,10 +30,31 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        repository = AppRepository(applicationContext)
+        reload()
+
         setContent {
             // This is the home screen: there is nothing to go back to.
             BackHandler {}
-            Box(Modifier.fillMaxSize().background(Color(0xFF050605)))
+            LauncherScreen(apps = apps, onOpen = ::open)
+        }
+    }
+
+    private fun reload() {
+        loadJob?.cancel()
+        loadJob = lifecycleScope.launch {
+            apps = withContext(Dispatchers.Default) { repository.loadApps() }
+        }
+    }
+
+    private fun open(app: AppEntry) {
+        try {
+            startActivity(app.launchIntent())
+        } catch (e: ActivityNotFoundException) {
+            // Removed or disabled since the list was built.
+            reload()
+        } catch (e: SecurityException) {
+            reload()
         }
     }
 }

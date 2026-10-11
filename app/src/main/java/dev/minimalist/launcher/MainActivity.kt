@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
 
     private lateinit var repository: AppRepository
-    private var apps by mutableStateOf(emptyList<AppEntry>())
+    private var home by mutableStateOf(HomeApps(camera = null, apps = emptyList()))
     private var loadJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,14 +36,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             // This is the home screen: there is nothing to go back to.
             BackHandler {}
-            LauncherScreen(apps = apps, onOpen = ::open)
+            LauncherScreen(home = home, onOpen = ::open)
         }
     }
 
     private fun reload() {
         loadJob?.cancel()
         loadJob = lifecycleScope.launch {
-            apps = withContext(Dispatchers.Default) { repository.loadApps() }
+            home = withContext(Dispatchers.Default) { repository.load() }
         }
     }
 

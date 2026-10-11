@@ -9,6 +9,11 @@ data class AppEntry(
     val component: ComponentName,
     /** Preinstalled system app: cannot be uninstalled. */
     val isSystem: Boolean,
+    /**
+     * Normally MAIN. The camera falls back to its capture action when the
+     * camera app has no launcher entry of its own.
+     */
+    val action: String = Intent.ACTION_MAIN,
 ) {
     val packageName: String get() = component.packageName
 
@@ -16,8 +21,8 @@ data class AppEntry(
     val key: String get() = component.flattenToShortString()
 
     fun launchIntent(): Intent =
-        Intent(Intent.ACTION_MAIN)
-            .addCategory(Intent.CATEGORY_LAUNCHER)
+        Intent(action)
+            .apply { if (action == Intent.ACTION_MAIN) addCategory(Intent.CATEGORY_LAUNCHER) }
             .setComponent(component)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
 }

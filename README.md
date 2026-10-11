@@ -1,4 +1,6 @@
-# minimalist-launcher
+# phosphor
+
+_Repository: minimalist-launcher_
 
 An Android home screen that is one scrollable, text-only list of your apps.
 It has no icons, wallpaper, widgets or app drawer.
@@ -20,7 +22,7 @@ Every push runs the **Build debug APK** workflow in GitHub Actions.
 1. In the repository on GitHub, open **Actions → Build debug APK**, then open the latest green run.
 2. Under **Artifacts**, download `launcher-debug-apk`. It is a zip containing `app-debug.apk`.
 3. On the phone, unzip it and open `app-debug.apk`. If Android asks, allow your browser or file manager to install unknown apps.
-4. Press Home. Android asks which launcher to use: pick **launcher** and choose **Always**.
+4. Press Home. Android asks which launcher to use: pick **phosphor** and choose **Always**.
    You can switch back any time in **Settings → Apps → Default apps → Home app**.
 
 All builds are signed with the same debug key (`app/debug.keystore`, committed on purpose),
